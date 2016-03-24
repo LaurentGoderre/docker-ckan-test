@@ -1,0 +1,9 @@
+solr:
+    image: makuk66/docker-solr:4.10.3
+    ports:
+        - "8983:8983"
+    volumes:
+        - ../open-data/ckan/ckan/config/solr/:/media/solr_conf
+        - ./solr-scripts:/docker-entrypoint-initsolr.d
+    environment:
+        - CKAN_SOLR_CORE=ckan
