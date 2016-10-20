@@ -12,3 +12,13 @@ postgres:
         - CKAN_DATASTORE_POSTGRES_WRITE_USER=ckan_default
         - CKAN_DATASTORE_POSTGRES_READ_USER=datastore_default
         - CKAN_DATASTORE_POSTGRES_READ_PWD=pass
+
+solr:
+    image: makuk66/docker-solr:4.10.3
+    ports:
+        - "8983:8983"
+    volumes:
+        - ../open-data/ckan/ckan/config/solr/:/media/solr_conf
+        - ./solr-scripts:/docker-entrypoint-initsolr.d
+    environment:
+        - CKAN_SOLR_CORE=ckan

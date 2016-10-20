@@ -1,9 +1,7 @@
 #!/bin/sh
 export PROJECT_NAME=ckan
 
-export SOLR_COMPOSE=docker-compose.solr.yml
 export SOLR_CONTAINER=${PROJECT_NAME}_solr_1
-export POSTGRES_COMPOSE=docker-compose.postgres.yml
 export POSTGRES_CONTAINER=${PROJECT_NAME}_postgres_1
 
 export CONFIG = ../open-data/ckan/test-core.ini
@@ -15,13 +13,16 @@ init: build init-postgres set-permissions-postgress
 
 build: build-postgres build-solr
 
-rebuild: rebuild-postgres rebuild-solr
+rebuild: down up
 
-up: up-postgres up-solr
+up:
+	docker-compose -p ${PROJECT_NAME} up -d
 
-stop: stop-postgres stop-solr
+stop:
+	docker-compose -p ${PROJECT_NAME} stop
 
-down: down-postgres down-solr
+down:
+	docker-compose -p ${PROJECT_NAME} down
 
 # Postgres config
 build-postgres: up-postgres
@@ -38,31 +39,33 @@ set-permissions-postgress:
 		docker exec -i --user=postgres ${POSTGRES_CONTAINER} psql
 
 up-postgres:
-	docker-compose -f ${POSTGRES_COMPOSE} -p ${PROJECT_NAME} up -d
+	docker-compose -p ${PROJECT_NAME} up -d postgres
 
 stop-postgres:
-	docker-compose -f ${POSTGRES_COMPOSE} -p ${PROJECT_NAME} stop
+	docker-compose -p ${PROJECT_NAME} stop postgres
 
 down-postgres:
-	docker-compose -f ${POSTGRES_COMPOSE} -p ${PROJECT_NAME} down
+	docker-compose -p ${PROJECT_NAME} down postgres
 # Solr Config
 build-solr: up-solr
 	#docker exec -it --user=solr ${SOLR_CONTAINER} \
 	#	/docker-entrypoint-initsolr.d/create-core.sh
 	docker exec -it ${SOLR_CONTAINER} \
 		/docker-entrypoint-initsolr.d/create-core-old.sh
-	sleep 7
+	while ! docker logs ${SOLR_CONTAINER} | grep "Started"; \
+			do sleep 0.1; \
+		done
 
 rebuild-solr: down-solr build-solr
 
 up-solr:
-	docker-compose -f ${SOLR_COMPOSE} -p ${PROJECT_NAME}  up -d
+	docker-compose -p ${PROJECT_NAME} up -d solr
 
 stop-solr:
-	docker-compose -f ${SOLR_COMPOSE} -p ${PROJECT_NAME} stop
+	docker-compose -p ${PROJECT_NAME} stop solr
 
 down-solr:
-	docker-compose -f ${SOLR_COMPOSE} -p ${PROJECT_NAME} down
+	docker-compose -p ${PROJECT_NAME} down solr
 
 build-venv:
 	virtualenv --no-site-packages ${VENV_PATH}
